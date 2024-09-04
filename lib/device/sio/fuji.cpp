@@ -1148,7 +1148,7 @@ void sioFuji::sio_open_directory()
 
     Debug_printf("Opening directory: \"%s\", pattern: \"%s\"\n", dirpath, pattern ? pattern : "");
 
-    if (_fnHosts[hostSlot].dir_open(dirpath, pattern, 0))
+    if (_fnHosts[hostSlot].dir_open(dirpath, pattern, 0, cmdFrame.aux2 & 1))
     {
         _current_open_directory_slot = hostSlot;
         sio_complete();
@@ -1190,6 +1190,33 @@ void _set_additional_direntry_details(fsdir_entry_t *f, uint8_t *dest, uint8_t m
 
     // File type
     dest[9] = MediaType::discover_disktype(f->filename);
+}
+
+void sioFuji::read_menu_entry(uint8_t maxlen, fujiMenu * fm)
+{
+    char replybuffer[256];
+
+    if (!fm->next_menu_entry()) 
+    {
+        // end of men
+        replybuffer[0] = 0x7F;
+        replybuffer[1] = 0x7F;
+        bus_to_computer((uint8_t *)replybuffer, maxlen, false);
+        return;
+    }
+
+    memset(replybuffer, 0, 256);
+    int offset = 0;
+
+    if (cmdFrame.aux2 & 0x40) {
+        replybuffer[0] = fm->get_menu_entry_type() >> 8;
+        replybuffer[1] = fm->get_menu_entry_type();
+        offset = 2;
+    }
+
+    if (cmdFrame.aux2 & 0x20) fm->get_item(&replybuffer[offset]);
+    else fm->get_name(&replybuffer[offset]);
+    bus_to_computer((uint8_t *)replybuffer, maxlen, false);
 }
 
 // TODO: VERIFY THIS CODE. THE STASH SEEMED CORRUPT
@@ -1389,9 +1416,13 @@ void sioFuji::sio_read_directory_entry()
         return;
     }
 
+    fujiHost *fh = &_fnHosts[_current_open_directory_slot];
+
+    if (fh->get_menu()) return read_menu_entry(maxlen, fh->get_menu());
+
     char current_entry[256];
 
-    fsdir_entry_t *f = _fnHosts[_current_open_directory_slot].dir_nextfile();
+    fsdir_entry_t *f = fh->dir_nextfile();
 
     if (f == nullptr)
     {
@@ -1414,6 +1445,16 @@ void sioFuji::sio_read_directory_entry()
             bufsize = maxlen - ADDITIONAL_DETAILS_BYTES;
             filenamedest = current_entry + ADDITIONAL_DETAILS_BYTES;
         }
+        // 0x40 indicates we want the menu resource name and type.
+        else if (cmdFrame.aux2 & 0x40)
+        {
+            if (f->isDir) current_entry[1] = 1;
+            else if (f->filename[0] == '+') current_entry[1] = 3; // files starting with plus are links.
+            else  current_entry[1] = 2;
+            current_entry[0] = 0;
+            filenamedest += 2;
+            bufsize -= 2;
+        }
         else
         {
             bufsize = maxlen;
@@ -1425,8 +1466,8 @@ void sioFuji::sio_read_directory_entry()
         // Add a slash at the end of directory entries
         if (f->isDir && filelen < (bufsize - 2))
         {
-            current_entry[filelen] = '/';
-            current_entry[filelen + 1] = '\0';
+            filenamedest[filelen] = '/';
+            filenamedest[filelen + 1] = '\0';
         }
     }
 

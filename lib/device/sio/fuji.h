@@ -178,6 +178,7 @@ protected:
     void sio_get_adapter_config_extended(); // 0xC4
     void sio_hash_clear();             // 0xC2
 
+    void read_menu_entry(uint8_t maxlen, fujiMenu *fm);
     void sio_status() override;
     void sio_process(uint32_t commanddata, uint8_t checksum) override;
 

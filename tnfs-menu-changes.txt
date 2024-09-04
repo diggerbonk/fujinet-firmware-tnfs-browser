@@ -1,0 +1,75 @@
+This update contains firware changes to support TNFS menus which extends 
+Gopher-like functionality to the FujiNet disk images browser. Like Gopher
+menus, TNFS menus are line based, with each line defining the type, name, and
+location of a menu resource.
+
+This change requires a corresponding update to the Config application 
+to be activated, but is backwards compatible with existing Config apps.
+
+Menu item format: [<type|]<name>[|<resource>]\n
+
+    <type>     : 16 bit integer value indicating the menu item type. Optional.
+                 If the type field is not present, the type is assumed to be 0.
+    <name>     : A friendly name for the item that will be displayed by a menu
+                 brower. The <display> text must not contain the pipe ('\') 
+                 symbol, and must be less than 80 characters. 
+    <resource> : String describing the item to be accessed by the menu browser.
+                 Optional. If the <item> field is not present, it is set 
+                 to be equal to the <display> field. 
+
+Menu item types supported in this update:
+
+    0000 : Line of plain text to be displayed by the TNFS browser. 
+    0001 : Local file folder. <item> is the name of the folder.
+    0002 : Binary image in the current directory. <item> is set to the 
+           image filename.
+    0003 : TNFS host link. Resource is the TNFS hostname. 
+    0004 : TNFS Submenu. This is an alias for folder.
+    7F7F : End of menu. Optional.
+
+    The type field can be omitted, the default type is 0000. 
+
+    While it is possible for individual clients to overload types and define 
+    client-specific behavior, the fujiMenu.h firmware source file is
+    considered the canonical source for supported types.
+
+Code changes:
+
+lib/fuji/fujiHost.cpp
+
+  * Update dir_tell method to use a menu if one has been opened.
+  * Update dir_seek method to use a menu if one has been opened.
+  * Update dir_open method
+    * New parameter: useFujimenu
+    * If useFujimenu is true, check for a a menu file in the 
+      current directory.
+  * Update method dir_nextfile
+    * If menu is initialized, use menu get_next_menu_entry()
+  * Added method get_menu to access menu functions
+
+lib/fuji/fujiHost.h
+
+  * Add new _menu data menber.
+  * Add new method get_menu_initialized()
+  * Update method dir_open to take new parameter useFujimenu
+
+lib/fuji/fujiMenu.cpp lib/fuji/fujiMenu.h
+
+  * New class implementing new menu interactions. 
+  * Manage menu file accessf
+  * Keep offset and position state for menu entries
+
+lib/device/sio/fuji.cpp
+
+  * In sio_open_directory:
+    * Pass useFujimenu=true to dir_open if cmdFrame.aux2 has 0x01 set
+  * In new method read_menu_entry:
+    * Return 7f7f at end of menu file to emulate current end of directory 
+      behavior
+    * Encode the menu item type in first two bytes of "read redirectory" 
+      response buffer.
+    * If aux to has 0x20 set, return the resource, otehrwise return the 
+      short item name.
+  * in sio_read_directory_entry():
+    * If a menu has been initialized, invoke read_menu_entry instead of 
+      sio_read_directory_entry
