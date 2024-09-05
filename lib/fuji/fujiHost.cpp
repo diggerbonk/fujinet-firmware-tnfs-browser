@@ -187,19 +187,13 @@ fsdir_entry_t *fujiHost::dir_nextfile()
     case HOSTTYPE_TNFS:
     case HOSTTYPE_SMB:
     case HOSTTYPE_FTP:
-        if (_menu.get_initialized()) return read_menu_entry(256);
+        if (_menu.get_initialized()) return _menu.next_menu_entry();
         else return _fs->dir_read();
     case HOSTTYPE_UNINITIALIZED:
         break;
     }
 
     return nullptr;
-}
-
-fsdir_entry_t *fujiHost::read_menu_entry(uint8_t maxlen)
-{
-    if (!_menu.get_initialized()) return nullptr;
-    return _menu.next_menu_entry();
 }
 
 void fujiHost::dir_close()

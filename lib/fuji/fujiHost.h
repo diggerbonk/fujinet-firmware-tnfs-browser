@@ -80,7 +80,6 @@ public:
     fsdir_entry_t * dir_nextfile();
     uint16_t dir_tell();
     bool dir_seek(uint16_t position);
-    fsdir_entry_t *  read_menu_entry(uint8_t maxlen);
 
 };
 
