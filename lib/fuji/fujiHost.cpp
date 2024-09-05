@@ -106,11 +106,10 @@ uint16_t fujiHost::dir_tell()
     {
     case HOSTTYPE_LOCAL:
     case HOSTTYPE_TNFS:
-        if (_menu.get_initialized()) result = _menu.get_pos();
-        else result = _fs->dir_tell();
     case HOSTTYPE_SMB:
     case HOSTTYPE_FTP:
-        result = _fs->dir_tell();
+        if (_menu.get_initialized()) result = _menu.get_pos();
+        else result = _fs->dir_tell();
         break;
     case HOSTTYPE_UNINITIALIZED:
         break;
@@ -129,11 +128,10 @@ bool fujiHost::dir_seek(uint16_t pos)
     {
     case HOSTTYPE_LOCAL:
     case HOSTTYPE_TNFS:
-        if (_menu.get_initialized()) result = _menu.set_pos(pos);
-        else result = _fs->dir_seek(pos);
     case HOSTTYPE_SMB:
     case HOSTTYPE_FTP:
-        result = _fs->dir_seek(pos);
+        if (_menu.get_initialized()) result = _menu.set_pos(pos);
+        else result = _fs->dir_seek(pos);
         break;
     case HOSTTYPE_UNINITIALIZED:
         break;
