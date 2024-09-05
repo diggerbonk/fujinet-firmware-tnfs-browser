@@ -139,7 +139,7 @@ bool fujiHost::dir_seek(uint16_t pos)
     return result;
 }
 
-bool fujiHost::dir_open(const char *path, const char *pattern, uint16_t options, bool menuTypeSupport)
+bool fujiHost::dir_open(const char *path, const char *pattern, uint16_t options)
 {
     Debug_printf("::dir_open {%d:%d} \"%s\", pattern \"%s\"\n", slotid, _type, path, pattern ? pattern : "");
     if (_fs == nullptr)

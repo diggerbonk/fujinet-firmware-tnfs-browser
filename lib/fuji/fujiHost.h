@@ -75,7 +75,7 @@ public:
     bool file_remove(char *fullpath);
 
     // Directory functions
-    bool dir_open(const char *path, const char *pattern, uint16_t options = 0, bool menuTypeSupport = false);
+    bool dir_open(const char *path, const char *pattern, uint16_t options = 0);
     void dir_close();
     fsdir_entry_t * dir_nextfile();
     uint16_t dir_tell();
