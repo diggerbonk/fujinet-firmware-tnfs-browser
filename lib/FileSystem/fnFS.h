@@ -51,6 +51,7 @@ struct fsdir_entry
     bool isDir;
     uint32_t size;
     time_t modified_time;
+    uint8_t menu_type;
 };
 typedef struct fsdir_entry fsdir_entry_t;
 
