@@ -23,7 +23,6 @@ private:
     FileSystem *_fs = nullptr;
     fujiHostType _type;
     fujiMenu  _menu;
-    bool _menuTypeSupport = false;
 
     char _hostname[MAX_HOSTNAME_LEN] = { '\0' };
     char _prefix[MAX_HOST_PREFIX_LEN] = { '\0' };
