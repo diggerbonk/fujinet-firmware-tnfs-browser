@@ -71,7 +71,7 @@ uint16_t fujiMenu::decode_menutype(const char * buf)
     return (uint16_t)strtol(buf, nullptr, 16);
 }
 
-bool fujiMenu::next_menu_entry() 
+fsdir_entry_t * fujiMenu::next_menu_entry() 
 {
     char tempBuf[MAX_MENU_LINE_LEN];
     _type = MENU_TYPE_TEXT;
@@ -88,7 +88,7 @@ bool fujiMenu::next_menu_entry()
         if (fseek(_menu_file, _current_offset, 0) != 0)
         {
             Debug_printf("fujiMenu::get_next_menu_entry, cannot seek to current offset.");
-            return false;
+            return nullptr;
         }
     }
 
@@ -105,7 +105,7 @@ bool fujiMenu::next_menu_entry()
             tempBuf[len-1] = 0;
             len--;
         }
-        else return false;
+        else return nullptr;
 
         char * pt = strchr(tempBuf, '|');
         if (pt && (pt - tempBuf) < 5)
@@ -140,16 +140,15 @@ bool fujiMenu::next_menu_entry()
         strncpy(_name, &tempBuf[nameStart], _name_len);
         strncpy(_item, &tempBuf[itemStart], _item_len);
 
-        if (_type == MENU_TYPE_FOLDER || _type == MENU_TYPE_SUBMENU) 
-        {
-            _item_len++;
-            _item[_item_len-1] = '/';
-            _item[_item_len] = 0;
-        }
-
-        return true;
+        // populate _direntry;
+        strncpy(_direntry.filename, _item, MAX_PATHLEN);
+        _direntry.isDir = (_type == MENU_TYPE_FOLDER);
+        _direntry.size = 0;
+        _direntry.modified_time = 0;
+        _direntry.menu_type = _type;
+        return &_direntry;
     }
-    else return false;
+    else return nullptr;
 }
 
 uint8_t fujiMenu::get_name(char * p)

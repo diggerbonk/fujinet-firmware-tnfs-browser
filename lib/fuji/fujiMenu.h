@@ -47,7 +47,7 @@ public:
     bool get_initialized() { return (_menu_file != nullptr); };
     uint16_t get_pos() { return _current_offset; };
     bool set_pos(uint16_t newPos);
-    bool next_menu_entry();
+    fsdir_entry_t *  next_menu_entry();
 
 };
 

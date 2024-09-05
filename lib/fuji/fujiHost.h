@@ -23,6 +23,7 @@ private:
     FileSystem *_fs = nullptr;
     fujiHostType _type;
     fujiMenu  _menu;
+    bool _menuTypeSupport = false;
 
     char _hostname[MAX_HOSTNAME_LEN] = { '\0' };
     char _prefix[MAX_HOST_PREFIX_LEN] = { '\0' };
@@ -74,11 +75,12 @@ public:
     bool file_remove(char *fullpath);
 
     // Directory functions
-    bool dir_open(const char *path, const char *pattern, uint16_t options = 0, bool useMenu = false);
+    bool dir_open(const char *path, const char *pattern, uint16_t options = 0, bool menuTypeSupport = false);
     void dir_close();
     fsdir_entry_t * dir_nextfile();
     uint16_t dir_tell();
     bool dir_seek(uint16_t position);
+    fsdir_entry_t *  read_menu_entry(uint8_t maxlen);
 
 };
 

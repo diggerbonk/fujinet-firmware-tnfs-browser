@@ -141,7 +141,7 @@ bool fujiHost::dir_seek(uint16_t pos)
     return result;
 }
 
-bool fujiHost::dir_open(const char *path, const char *pattern, uint16_t options, bool useMenu)
+bool fujiHost::dir_open(const char *path, const char *pattern, uint16_t options, bool menuTypeSupport)
 {
     Debug_printf("::dir_open {%d:%d} \"%s\", pattern \"%s\"\n", slotid, _type, path, pattern ? pattern : "");
     if (_fs == nullptr)
@@ -170,12 +170,11 @@ bool fujiHost::dir_open(const char *path, const char *pattern, uint16_t options,
         break;
     }
 
-    if (useMenu) {
-        if (strlen(realpath) > 1) strlcat(realpath, "/tnfs.menu", 256);
-        else strlcat(realpath, "tnfs.menu", 256);
-        FILE * mf = _fs->file_open(realpath, "r");
-        if (mf) _menu.init(realpath, mf);
-    }
+    // if there is a tnfs.menu file, initialize the menu for 
+    if (strlen(realpath) > 1) strlcat(realpath, "/tnfs.menu", 256);
+    else strlcat(realpath, "tnfs.menu", 256);
+    FILE * mf = _fs->file_open(realpath, "r");
+    if (mf) _menu.init(realpath, mf);
 
     return result;
 }
@@ -190,12 +189,19 @@ fsdir_entry_t *fujiHost::dir_nextfile()
     case HOSTTYPE_TNFS:
     case HOSTTYPE_SMB:
     case HOSTTYPE_FTP:
-        return _fs->dir_read();
+        if (_menu.get_initialized()) return read_menu_entry(256);
+        else return _fs->dir_read();
     case HOSTTYPE_UNINITIALIZED:
         break;
     }
 
     return nullptr;
+}
+
+fsdir_entry_t *fujiHost::read_menu_entry(uint8_t maxlen)
+{
+    if (!_menu.get_initialized()) return nullptr;
+    return _menu.next_menu_entry();
 }
 
 void fujiHost::dir_close()
